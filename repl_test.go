@@ -6,15 +6,15 @@ import (
 
 func TestCleaninput(t *testing.T) {
 	cases := []struct {
-	input    string
-	expected []string
+		input    string
+		expected []string
 	}{
 		{
 			input:    "  hello  world  ",
 			expected: []string{"hello", "world"},
 		},
 		{
-			input: "This  is my String",
+			input:    "This  is my String",
 			expected: []string{"this", "is", "my", "string"},
 		},
 		// add more cases here
@@ -27,7 +27,7 @@ func TestCleaninput(t *testing.T) {
 		}
 		for i := range actual {
 			word := actual[i]
-			expectedWord := c.expected[i]	
+			expectedWord := c.expected[i]
 			if word != expectedWord {
 				t.Errorf("word: %s is not %s", word, expectedWord)
 			}
