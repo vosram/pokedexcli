@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"os"
 )
@@ -9,7 +10,7 @@ import (
 type cliCommand struct {
 	name        string
 	description string
-	callback    func(conf *config) error
+	callback    func(conf *config, args ...string) error
 }
 
 
@@ -35,17 +36,22 @@ func getCommands() map[string]cliCommand {
 			description: "Exit the Pokedex",
 			callback:    commandExit,
 		},
+		"explore": {
+			name:        "explore",
+			description: "Explore a location",
+			callback:    commandExplore,
+		},
 	}
 	return commands
 }
 
-func commandExit(conf *config) error {
+func commandExit(conf *config, args ...string) error {
 	fmt.Println("Closing the Pokedex... Goodbye!")
 	os.Exit(0)
 	return nil
 }
 
-func commandHelp(conf *config) error {
+func commandHelp(conf *config, args ...string) error {
 	fmt.Printf("Welcome to the Pokedex!\nUsage:\n\n")
 	commands := getCommands()
 	for _, command := range commands {
@@ -54,7 +60,7 @@ func commandHelp(conf *config) error {
 	return nil
 }
 
-func commandMap(conf *config) error {
+func commandMap(conf *config, args ...string) error {
 	locationRes, err := conf.pokeapiClient.ListLocations(conf.nextLocationsURL)
 	if err != nil {
 		return err
@@ -70,7 +76,7 @@ func commandMap(conf *config) error {
 	return nil
 }
 
-func commandMapb(conf *config) error {
+func commandMapb(conf *config, args ...string) error {
 	if conf.prevLocationsURL == nil {
 		return fmt.Errorf("You're on the first page")
 	}
@@ -86,5 +92,22 @@ func commandMapb(conf *config) error {
 		fmt.Println(loc.Name)
 	}
 
+	return nil
+}
+
+func commandExplore(conf *config, args ...string) error {
+	if len(args) != 1 {
+		return errors.New("You must provide a location name")
+	}
+	name := args[0]	
+	exploreAreaResp, err := conf.pokeapiClient.GetLocation(name)
+	if err != nil {
+		return err
+	}
+	
+	fmt.Printf("Exploring %s...\nFound Pokemon: \n", name)
+	for _, encounter := range exploreAreaResp.PokemonEncounters {
+		fmt.Printf("- %s\n", encounter.Pokemon.Name)
+	}
 	return nil
 }

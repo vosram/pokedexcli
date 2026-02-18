@@ -27,8 +27,13 @@ func startRepl(conf *config) {
 			continue
 		}
 
+		args := []string{}
+		if len(words) > 1 {
+			args = words[1:]
+		}
+
 		if command, ok := getCommands()[words[0]]; ok {
-			err := command.callback(conf)
+			err := command.callback(conf, args...)
 			if err != nil {
 				fmt.Println(err)
 			}
