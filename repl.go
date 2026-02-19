@@ -10,9 +10,9 @@ import (
 )
 
 type config struct {
-	pokeapiClient 				pokeapi.Client
-	nextLocationsURL			*string
-	prevLocationsURL 			*string
+	pokeapiClient    pokeapi.Client
+	nextLocationsURL *string
+	prevLocationsURL *string
 }
 
 func startRepl(conf *config) {
