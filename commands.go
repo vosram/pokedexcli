@@ -50,6 +50,11 @@ func getCommands() map[string]cliCommand {
 			description: "Inspect a pokemon in your pokedex",
 			callback:    commandInspect,
 		},
+		"pokedex": {
+			name:        "pokedex",
+			description: "List all pokemon in your pokedex",
+			callback:    commandPokedex,
+		},
 	}
 	return commands
 }
@@ -126,7 +131,7 @@ func commandCatch(conf *config, args ...string) error {
 		return errors.New("a name of a pokemon is needed")
 	}
 	pokemonName := args[0]
-	pokemon, err := conf.pokeapiClient.FetchPokemon(pokemonName)	
+	pokemon, err := conf.pokeapiClient.FetchPokemon(pokemonName)
 
 	if err != nil {
 		return err
@@ -159,32 +164,35 @@ func commandInspect(conf *config, args ...string) error {
 		return errors.New("you must provide the name of a pokemon in your pokedex")
 	}
 
-	pokemonName := args[0]	
+	pokemonName := args[0]
 	pokemon, err := conf.pokeapiClient.GetFromPokedex(pokemonName)
 	if err != nil {
 		return err
 	}
-	/*
-		TODO: iterate through pokemon.Stats to get
-		- hp
-		- attack
-		- defense
-		- special-attack
-		- special-defense
-		- speed
-	*/
-	
+
 	fmt.Printf("Name: %s\n", pokemon.Name)
 	fmt.Printf("Height: %d\n", pokemon.Height)
 	fmt.Printf("Weight: %d\n", pokemon.Weight)
 	fmt.Println("Stats:")
 	for _, stat := range pokemon.Stats {
-		fmt.Printf("  -%s: %v\n",stat.Stat.Name, stat.BaseStat)
+		fmt.Printf("  -%s: %v\n", stat.Stat.Name, stat.BaseStat)
 	}
 	fmt.Println("Types:")
 	pokeTypes := pokemon.Types
 	for _, pokeType := range pokeTypes {
 		fmt.Printf("  - %s\n", pokeType.Type.Name)
+	}
+	return nil
+}
+
+func commandPokedex(conf *config, args ...string) error {
+	pokeList, err := conf.pokeapiClient.GetAllFromPokedex()
+	if err != nil {
+		return err
+	}
+	fmt.Println("Your Pokedex:")
+	for _, pokemon := range pokeList {
+		fmt.Printf("  - %s\n", pokemon)
 	}
 	return nil
 }
