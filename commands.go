@@ -3,16 +3,15 @@ package main
 import (
 	"errors"
 	"fmt"
+	"math/rand"
 	"os"
 )
-
 
 type cliCommand struct {
 	name        string
 	description string
 	callback    func(conf *config, args ...string) error
 }
-
 
 func getCommands() map[string]cliCommand {
 	commands := map[string]cliCommand{
@@ -41,6 +40,11 @@ func getCommands() map[string]cliCommand {
 			description: "Explore a location",
 			callback:    commandExplore,
 		},
+		"catch": {
+			name:        "catch <pokemon_name>",
+			description: "Attempt to catch a pokemon",
+			callback:    commandCatch,
+		},
 	}
 	return commands
 }
@@ -65,7 +69,7 @@ func commandMap(conf *config, args ...string) error {
 	if err != nil {
 		return err
 	}
-	
+
 	conf.nextLocationsURL = locationRes.Next
 	conf.prevLocationsURL = locationRes.Previous
 
@@ -87,7 +91,7 @@ func commandMapb(conf *config, args ...string) error {
 	}
 	conf.nextLocationsURL = locationsResp.Next
 	conf.prevLocationsURL = locationsResp.Previous
-	
+
 	for _, loc := range locationsResp.Results {
 		fmt.Println(loc.Name)
 	}
@@ -99,15 +103,48 @@ func commandExplore(conf *config, args ...string) error {
 	if len(args) != 1 {
 		return errors.New("You must provide a location name")
 	}
-	name := args[0]	
+	name := args[0]
 	exploreAreaResp, err := conf.pokeapiClient.GetLocation(name)
 	if err != nil {
 		return err
 	}
-	
+
 	fmt.Printf("Exploring %s...\nFound Pokemon: \n", name)
 	for _, encounter := range exploreAreaResp.PokemonEncounters {
 		fmt.Printf("- %s\n", encounter.Pokemon.Name)
 	}
 	return nil
+}
+
+func commandCatch(conf *config, args ...string) error {
+	if len(args) != 1 {
+		return errors.New("a name of a pokemon is needed")
+	}
+	pokemonName := args[0]
+	pokemon, err := conf.pokeapiClient.FetchPokemon(pokemonName)	
+
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("Throwing a Pokeball at %s...\n", pokemon.Name)
+	// Ceiling for probablity should be 700
+	didCatch := getProbability(700, pokemon.BaseExperience)
+	if didCatch == false {
+		fmt.Printf("%s escaped!\n", pokemon.Name)
+		return nil
+	}
+
+	conf.pokeapiClient.StorePokemon(pokemon)
+	fmt.Printf("%s was caught!\n", pokemon.Name)
+	return nil
+}
+
+func getProbability(ceil, target int) bool {
+	randomNum := rand.Intn(ceil)
+	fmt.Printf("random num is: %d and target is:  %d\n", randomNum, target)
+	if randomNum >= target {
+		return true
+	}
+	return false
 }
