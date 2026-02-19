@@ -45,6 +45,11 @@ func getCommands() map[string]cliCommand {
 			description: "Attempt to catch a pokemon",
 			callback:    commandCatch,
 		},
+		"inspect": {
+			name:        "inspect <pokemon_name>",
+			description: "Inspect a pokemon in your pokedex",
+			callback:    commandInspect,
+		},
 	}
 	return commands
 }
@@ -147,4 +152,39 @@ func getProbability(ceil, target int) bool {
 		return true
 	}
 	return false
+}
+
+func commandInspect(conf *config, args ...string) error {
+	if len(args) != 1 {
+		return errors.New("you must provide the name of a pokemon in your pokedex")
+	}
+
+	pokemonName := args[0]	
+	pokemon, err := conf.pokeapiClient.GetFromPokedex(pokemonName)
+	if err != nil {
+		return err
+	}
+	/*
+		TODO: iterate through pokemon.Stats to get
+		- hp
+		- attack
+		- defense
+		- special-attack
+		- special-defense
+		- speed
+	*/
+	
+	fmt.Printf("Name: %s\n", pokemon.Name)
+	fmt.Printf("Height: %d\n", pokemon.Height)
+	fmt.Printf("Weight: %d\n", pokemon.Weight)
+	fmt.Println("Stats:")
+	for _, stat := range pokemon.Stats {
+		fmt.Printf("  -%s: %v\n",stat.Stat.Name, stat.BaseStat)
+	}
+	fmt.Println("Types:")
+	pokeTypes := pokemon.Types
+	for _, pokeType := range pokeTypes {
+		fmt.Printf("  - %s\n", pokeType.Type.Name)
+	}
+	return nil
 }
